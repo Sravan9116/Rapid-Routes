@@ -54,23 +54,31 @@
         <button id="start-btn" onclick="startNavigation()">START</button>
     </div>
 
-    <!-- 📊 RIGHT SIDE FLOATING INFO -->
+    <!-- 📊 RIGHT SIDE FLOATING PANEL -->
     <div id="info-panel">
 
+        <!-- Speed -->
         <div class="info-circle">
             <div id="nav-speed">0.0</div>
             <small>km/h</small>
         </div>
 
+        <!-- Distance -->
         <div class="info-circle">
             <div id="nav-distance">0.0</div>
             <small>km</small>
         </div>
 
+        <!-- Traffic -->
         <div class="traffic-circle">
             <i class="fa-solid fa-circle-exclamation"></i>
             <div id="traffic-eta">-- min</div>
         </div>
+
+        <!-- 🚨 EMERGENCY BUTTON -->
+        <button class="emergency-circle" onclick="triggerEmergency()">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </button>
 
     </div>
 

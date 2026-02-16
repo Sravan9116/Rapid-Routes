@@ -53,6 +53,7 @@ body {
     width: 200px;
     outline: none;
     font-size: 14px;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 .go-btn {
@@ -132,15 +133,15 @@ body {
     font-weight: 600;
 }
 
-/* 📊 RIGHT SIDE FLOATING PANEL */
+/* ================= RIGHT SIDE FLOATING PANEL ================= */
 #info-panel {
     position: absolute;
     right: 20px;
-    top: 120px;
+    bottom: 120px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    z-index: 1500;
+    gap: 16px;
+    z-index: 1000;
 }
 
 /* Speed & Distance Circles */
@@ -161,21 +162,52 @@ body {
     font-size: 16px;
 }
 
-/* Traffic Circle */
-.traffic-circle {
-    background: #ff7a00;
-    color: white;
-    width: 90px;
-    height: 90px;
+/* Common Circle Style */
+.info-circle,
+.traffic-circle,
+.emergency-circle {
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    background: white;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     font-weight: 600;
+    font-size: 14px;
+    transition: 0.3s ease;
+}
+
+/* Traffic Circle Style */
+.traffic-circle {
+    color: #ff6600;
 }
 
 .traffic-circle i {
     margin-bottom: 5px;
+}
+
+/* Hover effect */
+.info-circle:hover,
+.traffic-circle:hover,
+.emergency-circle:hover {
+    transform: scale(1.08);
+}
+
+/* 🚨 Emergency Button */
+.emergency-circle {
+    background: linear-gradient(135deg, #ff3b30, #c40000);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+}
+
+/* Dark Mode Support */
+body.dark .info-circle,
+body.dark .traffic-circle {
+    background: #1f1f1f;
+    color: white;
 }
