@@ -2,7 +2,7 @@ html,
 body {
     height: 100%;
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 #map {
@@ -10,112 +10,172 @@ body {
     width: 100%;
 }
 
-/* SEARCH BAR */
-#search-bar {
+/* 🌙 DARK BUTTON */
+#dark-toggle {
     position: absolute;
-    top: 10px;
+    top: 15px;
+    right: 15px;
+    z-index: 2000;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 🔍 SEARCH */
+#search-container {
+    position: absolute;
+    top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: white;
-    padding: 10px;
-    border-radius: 10px;
     display: flex;
-    gap: 8px;
-    z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    gap: 10px;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 50px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1500;
+    align-items: center;
 }
 
 .input-group {
     position: relative;
 }
 
-#search-bar input {
-    padding: 8px;
-    width: 180px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+#search-container input {
+    border: none;
+    background: #f1f3f4;
+    padding: 10px 15px;
+    border-radius: 30px;
+    width: 200px;
+    outline: none;
+    font-size: 14px;
+}
+
+.go-btn {
+    background: #007aff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
 }
 
 /* Suggestions */
 .suggestions {
     position: absolute;
-    top: 42px;
+    top: 45px;
     width: 100%;
     background: white;
-    max-height: 180px;
+    border-radius: 12px;
+    max-height: 200px;
     overflow-y: auto;
-    border-radius: 6px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-    z-index: 2000;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    z-index: 3000;
 }
 
 .suggestion-item {
-    padding: 8px;
-    cursor: pointer;
+    padding: 10px;
     font-size: 13px;
+    cursor: pointer;
 }
 
 .suggestion-item:hover {
-    background: #eee;
+    background: #f0f0f0;
 }
 
-/* VEHICLE PANEL */
+/* 🚗 VEHICLE PANEL */
 #vehicle-panel {
     position: absolute;
     bottom: 0;
     width: 100%;
     background: white;
-    padding: 10px;
     display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 1000;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+    justify-content: space-evenly;
+    padding: 15px 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    z-index: 1500;
 }
 
 .vehicle {
     text-align: center;
     cursor: pointer;
-    color: #555;
+    color: #666;
+}
+
+.vehicle i {
+    font-size: 22px;
+}
+
+.vehicle span {
+    font-size: 12px;
+    display: block;
 }
 
 .vehicle.active {
     color: #007aff;
 }
 
-.vehicle i {
-    font-size: 22px;
-    display: block;
-}
-
-.vehicle span {
-    font-size: 12px;
-}
-
 #start-btn {
-    padding: 10px 16px;
-    background: #007aff;
+    background: #16a34a;
     color: white;
     border: none;
-    border-radius: 8px;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
 }
 
-/* NAV INFO */
-#nav-info {
+/* 📊 RIGHT SIDE FLOATING PANEL */
+#info-panel {
     position: absolute;
-    bottom: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    text-align: center;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    right: 20px;
+    top: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 1500;
 }
 
-.nav-icon {
-    font-size: 22px;
-    color: #007aff;
+/* Speed & Distance Circles */
+.info-circle {
+    background: white;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+}
+
+.info-circle div {
+    font-size: 16px;
+}
+
+/* Traffic Circle */
+.traffic-circle {
+    background: #ff7a00;
+    color: white;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+}
+
+.traffic-circle i {
+    margin-bottom: 5px;
 }
