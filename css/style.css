@@ -1,0 +1,121 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+}
+
+/* SEARCH BAR */
+#search-bar {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.input-group {
+    position: relative;
+}
+
+#search-bar input {
+    padding: 8px;
+    width: 180px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+/* Suggestions */
+.suggestions {
+    position: absolute;
+    top: 42px;
+    width: 100%;
+    background: white;
+    max-height: 180px;
+    overflow-y: auto;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    z-index: 2000;
+}
+
+.suggestion-item {
+    padding: 8px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.suggestion-item:hover {
+    background: #eee;
+}
+
+/* VEHICLE PANEL */
+#vehicle-panel {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.vehicle {
+    text-align: center;
+    cursor: pointer;
+    color: #555;
+}
+
+.vehicle.active {
+    color: #007aff;
+}
+
+.vehicle i {
+    font-size: 22px;
+    display: block;
+}
+
+.vehicle span {
+    font-size: 12px;
+}
+
+#start-btn {
+    padding: 10px 16px;
+    background: #007aff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+}
+
+/* NAV INFO */
+#nav-info {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: center;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.nav-icon {
+    font-size: 22px;
+    color: #007aff;
+}

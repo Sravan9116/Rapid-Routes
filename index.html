@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Safe Route</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- SEARCH BAR -->
+    <div id="search-bar">
+        <div class="input-group">
+            <input id="startInput" placeholder="Start location" oninput="suggestPlaces(this.value,'start')">
+            <div id="startSuggestions" class="suggestions"></div>
+        </div>
+
+        <div class="input-group">
+            <input id="endInput" placeholder="Destination" oninput="suggestPlaces(this.value,'end')">
+            <div id="endSuggestions" class="suggestions"></div>
+        </div>
+
+        <button onclick="buildRoute()">GO</button>
+    </div>
+
+    <!-- MAP -->
+    <div id="map"></div>
+
+    <!-- VEHICLE PANEL -->
+    <div id="vehicle-panel">
+        <div class="vehicle active" onclick="selectVehicle(event,'car')">
+            <i class="fa-solid fa-car"></i><span id="time-car">--</span>
+        </div>
+        <div class="vehicle" onclick="selectVehicle(event,'bike')">
+            <i class="fa-solid fa-motorcycle"></i><span id="time-bike">--</span>
+        </div>
+        <div class="vehicle" onclick="selectVehicle(event,'walk')">
+            <i class="fa-solid fa-person-walking"></i><span id="time-walk">--</span>
+        </div>
+        <div class="vehicle" onclick="selectVehicle(event,'truck')">
+            <i class="fa-solid fa-truck"></i><span id="time-truck">--</span>
+        </div>
+        <button id="start-btn" onclick="startNavigation()">START</button>
+    </div>
+
+    <!-- NAV INFO -->
+    <div id="nav-info">
+        <div id="nav-instruction">--</div>
+        <div>
+            <span id="nav-distance">-- km</span>
+            <span id="nav-speed">-- km/h</span>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/map.js"></script>
+
+</body>
+
+</html>
