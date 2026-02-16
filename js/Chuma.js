@@ -1,0 +1,595 @@
+document.addEventListener("DOMContentLoaded", function () {
+
+/* ================= GLOBAL VARIABLES ================= */
+
+let map;
+let startMarker = null;
+let endMarker = null;
+let routeLayer = null;
+let alternativeLayers = [];
+let navMarker = null;
+let watchId = null;
+
+let currentVehicle = "car";
+
+let fullRoute = [];
+let remainingRoute = [];
+let steps = [];
+let stepIndex = 0;
+
+let lastPos = null;
+let lastTime = null;
+let lastSpokenStep = -1;
+
+window.selectedStart = null;
+window.selectedEnd = null;
+
+/* ================= MAP INIT ================= */
+
+map = L.map("map").setView([13.0827, 80.2707], 13);
+
+let lightLayer = L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  { attribution: "&copy; OpenStreetMap contributors" }
+);
+
+let darkLayer = L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+);
+
+lightLayer.addTo(map);
+
+/* ================= DARK MODE ================= */
+
+window.toggleDarkMode = function () {
+  if (map.hasLayer(lightLayer)) {
+    map.removeLayer(lightLayer);
+    darkLayer.addTo(map);
+    document.body.classList.add("dark");
+  } else {
+    map.removeLayer(darkLayer);
+    lightLayer.addTo(map);
+    document.body.classList.remove("dark");
+  }
+};
+
+/* ================= AUTO GPS START ================= */
+
+function createStart(lat, lng) {
+
+  window.selectedStart = { lat, lng };
+
+  if (startMarker) map.removeLayer(startMarker);
+
+  startMarker = L.marker([lat, lng], { draggable: true })
+    .addTo(map)
+    .bindPopup("Your Location")
+    .openPopup();
+
+  startMarker.on("dragend", () => {
+    const p = startMarker.getLatLng();
+    window.selectedStart = { lat: p.lat, lng: p.lng };
+    if (window.selectedEnd) window.buildRoute();
+  });
+}
+
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      createStart(pos.coords.latitude, pos.coords.longitude);
+      map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+    },
+    () => createStart(13.0827, 80.2707),
+    { enableHighAccuracy: true }
+  );
+} else {
+  createStart(13.0827, 80.2707);
+}
+
+/* ================= BUILD ROUTE ================= */
+
+window.buildRoute = async function () {
+
+  if (!window.selectedStart || !window.selectedEnd) {
+    alert("Select start and destination first");
+    return;
+  }
+
+  if (routeLayer) map.removeLayer(routeLayer);
+  alternativeLayers.forEach(l => map.removeLayer(l));
+  alternativeLayers = [];
+
+  if (endMarker) map.removeLayer(endMarker);
+
+  endMarker = L.marker(window.selectedEnd)
+    .addTo(map)
+    .bindPopup("Destination");
+
+  try {
+
+    const res = await fetch("http://localhost:5000/api/navigation/route", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        startLat: window.selectedStart.lat,
+        startLng: window.selectedStart.lng,
+        endLat: window.selectedEnd.lat,
+        endLng: window.selectedEnd.lng,
+        vehicle: currentVehicle
+      })
+    });
+
+    const data = await res.json();
+    if (!data.routes || !data.routes.length) return;
+
+    data.routes.forEach((route, index) => {
+
+      const coords = route.geometry.coordinates.map(c => ({
+        lat: c[1],
+        lng: c[0]
+      }));
+
+      const poly = L.polyline(coords, {
+        color: index === 0 ? "#007aff" : "#999",
+        weight: index === 0 ? 6 : 4,
+        opacity: index === 0 ? 1 : 0.6
+      }).addTo(map);
+
+      if (index === 0) {
+        routeLayer = poly;
+        activateRoute(coords, route);
+      } else {
+        poly.on("click", () => {
+          activateRoute(coords, route);
+          highlightRoute(poly);
+          speak("Alternative route selected.");
+        });
+        alternativeLayers.push(poly);
+      }
+    });
+
+    map.fitBounds(routeLayer.getBounds(), { padding: [60, 60] });
+
+    simulateTrafficETA(data.routes[0].duration);
+    updateVehicleTimes();
+
+    speak("Route built successfully.");
+
+  } catch (err) {
+    console.error("Route error:", err);
+  }
+};
+
+/* ================= ACTIVATE ROUTE ================= */
+
+function activateRoute(coords, route) {
+  fullRoute = coords;
+  remainingRoute = [...coords];
+  steps = route.legs[0].steps || [];
+  stepIndex = 0;
+  lastSpokenStep = -1;
+}
+
+/* ================= HIGHLIGHT ROUTE ================= */
+
+function highlightRoute(selectedLayer) {
+  alternativeLayers.forEach(l =>
+    l.setStyle({ color: "#999", weight: 4, opacity: 0.6 })
+  );
+
+  selectedLayer.setStyle({
+    color: "#007aff",
+    weight: 6,
+    opacity: 1
+  });
+
+  routeLayer = selectedLayer;
+}
+
+/* ================= VEHICLE TIMES ================= */
+
+async function updateVehicleTimes() {
+
+  const vehicles = ["car", "bike", "walk", "truck"];
+
+  const results = await Promise.all(
+    vehicles.map(async (v) => {
+
+      const res = await fetch("http://localhost:5000/api/navigation/route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startLat: window.selectedStart.lat,
+          startLng: window.selectedStart.lng,
+          endLat: window.selectedEnd.lat,
+          endLng: window.selectedEnd.lng,
+          vehicle: v
+        })
+      });
+
+      const data = await res.json();
+      return data.routes?.[0] || null;
+    })
+  );
+
+  results.forEach((route, index) => {
+    if (!route) return;
+
+    const vehicle = vehicles[index];
+    const el = document.getElementById(`time-${vehicle}`);
+
+    if (el) {
+      el.innerText =
+        formatTime(route.duration) +
+        " • " +
+        formatDistance(route.distance);
+    }
+  });
+}
+
+/* ================= TRAFFIC ETA ================= */
+
+function simulateTrafficETA(baseTime) {
+  const factor = 1 + (Math.random() * 0.3 - 0.15);
+  const trafficTime = baseTime * factor;
+
+  const etaEl = document.getElementById("traffic-eta");
+  if (etaEl) {
+    etaEl.innerText =
+      "ETA: " + (trafficTime / 60).toFixed(1) + " mins";
+  }
+}
+
+/* ================= VOICE ================= */
+
+function speak(text) {
+  if (!text) return;
+  speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang = "en-IN";
+  msg.rate = 1;
+  speechSynthesis.speak(msg);
+}
+
+/* ================= START NAVIGATION ================= */
+
+window.startNavigation = function () {
+
+  if (!remainingRoute.length) {
+    alert("Build route first");
+    return;
+  }
+
+  if (watchId) navigator.geolocation.clearWatch(watchId);
+
+  navMarker = L.marker(window.selectedStart).addTo(map);
+
+  speak("Navigation started.");
+
+  watchId = navigator.geolocation.watchPosition(onMove, null,
+    { enableHighAccuracy: true });
+};
+
+/* ================= GPS UPDATE ================= */
+
+function onMove(pos) {
+
+  const cur = {
+    lat: pos.coords.latitude,
+    lng: pos.coords.longitude
+  };
+
+  navMarker.setLatLng(cur);
+  map.panTo(cur, { animate: true, duration: 0.5 });
+
+  updateSpeed(cur);
+  updateRemainingRoute(cur);
+  updateInstruction(cur);
+  detectOffRoute(cur);
+}
+
+/* ================= EMERGENCY FEATURE ================= */
+
+window.triggerEmergency = function () {
+
+  if (!navigator.geolocation) {
+    alert("Location not supported");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+
+    try {
+
+      await fetch("http://localhost:5000/api/emergency", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat, lng })
+      });
+
+      speak("Emergency alert sent to your family.");
+      alert("🚨 Emergency Alert Sent Successfully!");
+
+    } catch (err) {
+      alert("Failed to send emergency alert.");
+      console.error(err);
+    }
+
+  }, () => {
+    alert("Unable to fetch your location.");
+  });
+};
+
+/* ================= REST OF YOUR CODE (UNCHANGED) ================= */
+
+function detectOffRoute(cur) {
+  const nearest = remainingRoute.reduce((min, p) => {
+    const d = map.distance(cur, p);
+    return d < min ? d : min;
+  }, Infinity);
+
+  if (nearest > 50) {
+    speak("You are off route. Recalculating.");
+    window.selectedStart = cur;
+    window.buildRoute();
+  }
+}
+
+function updateSpeed(cur) {
+  const now = Date.now();
+  if (lastPos && lastTime) {
+    const d = map.distance(lastPos, cur);
+    const t = (now - lastTime) / 1000;
+    const speed = (d / t) * 3.6;
+    const speedEl = document.getElementById("nav-speed");
+    if (speedEl) speedEl.innerText = speed.toFixed(1) + " km/h";
+  }
+  lastPos = cur;
+  lastTime = now;
+}
+
+function updateRemainingRoute(cur) {
+  while (remainingRoute.length &&
+    map.distance(cur, remainingRoute[0]) < 15) {
+    remainingRoute.shift();
+  }
+}
+
+function updateInstruction(cur) {
+  if (!steps[stepIndex]) return;
+  const p = steps[stepIndex].maneuver.location;
+  const distance = map.distance(cur, { lat: p[1], lng: p[0] });
+  if (distance < 30 && stepIndex !== lastSpokenStep) {
+    speak(steps[stepIndex].maneuver.instruction);
+    lastSpokenStep = stepIndex;
+    stepIndex++;
+  }
+}
+
+function formatTime(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return h ? `${h}h ${m}m` : `${m} min`;
+}
+
+function formatDistance(m) {
+  return m >= 1000
+    ? (m / 1000).toFixed(1) + " km"
+    : Math.round(m) + " m";
+}
+
+window.selectVehicle = function (e, vehicle) {
+  document.querySelectorAll(".vehicle")
+    .forEach(x => x.classList.remove("active"));
+  e.currentTarget.classList.add("active");
+  currentVehicle = vehicle;
+  if (window.selectedStart && window.selectedEnd)
+    window.buildRoute();
+};
+
+});
+
+/* ================= server.js ================= */
+
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "..")));
+
+app.use("/api/navigation", require("./routes/navigation"));
+app.use("/api/emergency", require("./routes/emergency"));
+
+const PORT = 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
+
+/* ================= navigation.js ================= */
+
+const express = require("express");
+const router = express.Router();
+const axios = require("axios");
+
+router.post("/route", async (req, res) => {
+
+  try {
+
+    const { startLat, startLng, endLat, endLng, vehicle } = req.body;
+
+    let profile = "driving";
+
+    if (vehicle === "bike") profile = "cycling";
+    if (vehicle === "walk") profile = "foot";
+    if (vehicle === "truck") profile = "driving";
+
+    const url =
+      `https://router.project-osrm.org/route/v1/${profile}/` +
+      `${startLng},${startLat};${endLng},${endLat}` +
+      `?overview=full&geometries=geojson&steps=true`;
+
+    const response = await axios.get(url);
+
+    let data = response.data;
+
+    // 🔥 FORCE VEHICLE SPEED DIFFERENCE
+    const speedMultiplier = {
+      car: 1,
+      truck: 1.2,   // slower than car
+      bike: 2,      // slower
+      walk: 6       // much slower
+    };
+
+    const multiplier = speedMultiplier[vehicle] || 1;
+
+    data.routes[0].duration =
+      data.routes[0].duration * multiplier;
+
+    res.json(data);
+
+  } catch (error) {
+    console.error("Routing error:", error.message);
+    res.status(500).json({ error: "Routing failed" });
+  }
+});
+
+module.exports = router;
+
+/* ================= search.js ================= */
+
+let debounceTimer;
+
+function suggestPlaces(query, type) {
+
+  if (query.length < 3) return;
+
+  clearTimeout(debounceTimer);
+
+  debounceTimer = setTimeout(async () => {
+
+    const box = document.getElementById(
+      type === "start" ? "startSuggestions" : "endSuggestions"
+    );
+
+    box.innerHTML = "";
+
+    const url =
+      `https://nominatim.openstreetmap.org/search` +
+      `?format=json&limit=8&countrycodes=in&q=${encodeURIComponent(query)}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    data.forEach(place => {
+
+      const div = document.createElement("div");
+      div.className = "suggestion-item";
+      div.innerText = place.display_name;
+
+      div.onclick = () => {
+
+        document.getElementById(type + "Input").value = place.display_name;
+
+        const point = {
+          lat: parseFloat(place.lat),
+          lng: parseFloat(place.lon)
+        };
+
+        // 🔥 IMPORTANT: USE window
+        if (type === "start") {
+          window.selectedStart = point;
+        } else {
+          window.selectedEnd = point;
+        }
+
+        box.innerHTML = "";
+      };
+
+      box.appendChild(div);
+    });
+
+  }, 300);
+}
+
+
+/* ================= routes/emergency.js ================= */
+
+const express = require("express");
+const router = express.Router();
+const twilio = require("twilio");
+
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
+router.post("/", async (req, res) => {
+
+  try {
+
+    const { lat, lng } = req.body;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ error: "Location missing" });
+    }
+
+    const locationLink = `https://www.google.com/maps?q=${lat},${lng}`;
+
+    const messageBody =
+      `🚨 EMERGENCY ALERT 🚨\n\n` +
+      `Your family member might be in trouble.\n\n` +
+      `📍 Live Location:\n${locationLink}\n\n` +
+      `Please contact immediately.`;
+
+    /* ================= WHATSAPP MESSAGE ================= */
+
+    const whatsappMsg = client.messages.create({
+      from: process.env.TWILIO_WHATSAPP_NUMBER,
+      to: process.env.FAMILY_WHATSAPP_NUMBER,
+      body: messageBody
+    });
+
+    /* ================= VOICE CALL ================= */
+
+    const call = client.calls.create({
+      to: process.env.FAMILY_PHONE_NUMBER,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      twiml: `
+        <Response>
+          <Say voice="alice">
+            Emergency alert. Your family member may be in danger.
+          </Say>
+          <Pause length="1"/>
+          <Say voice="alice">
+            Location has been sent to your WhatsApp.
+          </Say>
+          <Pause length="1"/>
+          <Say voice="alice">
+            Please contact them immediately.
+          </Say>
+        </Response>
+      `
+    });
+
+    await Promise.all([whatsappMsg, call]);
+
+    console.log("WhatsApp & Call Triggered");
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("TWILIO ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;

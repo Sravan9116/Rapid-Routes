@@ -1,0 +1,133 @@
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+}
+
+.ai-wrapper {
+    display: flex;
+    height: 100vh;
+}
+
+/* SIDE PANELS */
+.side-panel,
+.planning-panel {
+    width: 22%;
+    padding: 20px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+.side-panel h2,
+.planning-panel h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #38bdf8;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.list-box div {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+/* CHAT SECTION */
+.chat-container {
+    width: 56%;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(15px);
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ai-avatar-big {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #007aff, #00f2ff);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 22px;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.message {
+    padding: 12px 16px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    max-width: 70%;
+}
+
+.user {
+    background: #007aff;
+    align-self: flex-end;
+}
+
+.bot {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.chat-input {
+    display: flex;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+}
+
+.chat-input button {
+    margin-left: 10px;
+    border: none;
+    background: #007aff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* PLANNER */
+.planner-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.planner-card button {
+    background: #38bdf8;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+}
