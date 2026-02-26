@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-/* ================= GLOBAL VARIABLES ================= */
+/* =====================================================
+   GLOBAL VARIABLES
+===================================================== */
 
 let map;
 let startMarker = null;
@@ -24,9 +26,12 @@ let lastSpokenStep = -1;
 window.selectedStart = null;
 window.selectedEnd = null;
 
-/* ================= MAP INIT ================= */
+/* =====================================================
+   MAP INITIALIZATION
+===================================================== */
 
 map = L.map("map").setView([13.0827, 80.2707], 13);
+window.map = map;
 
 let lightLayer = L.tileLayer(
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -39,7 +44,9 @@ let darkLayer = L.tileLayer(
 
 lightLayer.addTo(map);
 
-/* ================= DARK MODE ================= */
+/* =====================================================
+   DARK MODE
+===================================================== */
 
 window.toggleDarkMode = function () {
   if (map.hasLayer(lightLayer)) {
@@ -53,7 +60,49 @@ window.toggleDarkMode = function () {
   }
 };
 
-/* ================= AUTO GPS START ================= */
+/* =====================================================
+   GPS PERMISSION (ASK ONCE PER DEVICE)
+===================================================== */
+
+function initGPS() {
+
+  if (!navigator.geolocation) {
+    createStart(13.0827, 80.2707);
+    return;
+  }
+
+  if (localStorage.getItem("gpsAllowed") === "true") {
+    startWatching();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      localStorage.setItem("gpsAllowed", "true");
+      createStart(pos.coords.latitude, pos.coords.longitude);
+      map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+      startWatching();
+    },
+    () => createStart(13.0827, 80.2707),
+    { enableHighAccuracy: true }
+  );
+}
+
+function startWatching() {
+
+  if (watchId) navigator.geolocation.clearWatch(watchId);
+
+  watchId = navigator.geolocation.watchPosition(pos => {
+
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+
+    if (!window.selectedStart) {
+      createStart(lat, lng);
+    }
+
+  }, null, { enableHighAccuracy: true });
+}
 
 function createStart(lat, lng) {
 
@@ -73,25 +122,52 @@ function createStart(lat, lng) {
   });
 }
 
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      createStart(pos.coords.latitude, pos.coords.longitude);
-      map.setView([pos.coords.latitude, pos.coords.longitude], 14);
-    },
-    () => createStart(13.0827, 80.2707),
-    { enableHighAccuracy: true }
-  );
-} else {
-  createStart(13.0827, 80.2707);
+initGPS();
+
+/* =====================================================
+   AI DESTINATION HANDLER (FIXED PROPERLY)
+===================================================== */
+
+function handleAIDestination() {
+
+  const aiLat = localStorage.getItem("aiTargetLat");
+  const aiLng = localStorage.getItem("aiTargetLng");
+
+  if (!aiLat || !aiLng) return;
+
+  window.selectedEnd = {
+    lat: parseFloat(aiLat),
+    lng: parseFloat(aiLng)
+  };
+
+  if (endMarker) map.removeLayer(endMarker);
+
+  endMarker = L.marker(window.selectedEnd)
+    .addTo(map)
+    .bindPopup("AI Selected Destination")
+    .openPopup();
+
+  map.setView([window.selectedEnd.lat, window.selectedEnd.lng], 14);
+
+  const waitForStart = setInterval(() => {
+    if (window.selectedStart) {
+      clearInterval(waitForStart);
+      window.buildRoute();
+    }
+  }, 400);
+
+  localStorage.removeItem("aiTargetLat");
+  localStorage.removeItem("aiTargetLng");
 }
 
-/* ================= BUILD ROUTE ================= */
+/* =====================================================
+   BUILD ROUTE
+===================================================== */
 
 window.buildRoute = async function () {
 
   if (!window.selectedStart || !window.selectedEnd) {
-    alert("Select start and destination first");
+    console.log("Start or End missing");
     return;
   }
 
@@ -160,33 +236,9 @@ window.buildRoute = async function () {
   }
 };
 
-/* ================= ACTIVATE ROUTE ================= */
-
-function activateRoute(coords, route) {
-  fullRoute = coords;
-  remainingRoute = [...coords];
-  steps = route.legs[0].steps || [];
-  stepIndex = 0;
-  lastSpokenStep = -1;
-}
-
-/* ================= HIGHLIGHT ROUTE ================= */
-
-function highlightRoute(selectedLayer) {
-  alternativeLayers.forEach(l =>
-    l.setStyle({ color: "#999", weight: 4, opacity: 0.6 })
-  );
-
-  selectedLayer.setStyle({
-    color: "#007aff",
-    weight: 6,
-    opacity: 1
-  });
-
-  routeLayer = selectedLayer;
-}
-
-/* ================= VEHICLE TIMES ================= */
+/* =====================================================
+   VEHICLE TIMES
+===================================================== */
 
 async function updateVehicleTimes() {
 
@@ -227,20 +279,37 @@ async function updateVehicleTimes() {
   });
 }
 
-/* ================= TRAFFIC ETA ================= */
+/* =====================================================
+   ROUTE HELPERS
+===================================================== */
+
+function activateRoute(coords, route) {
+  fullRoute = coords;
+  remainingRoute = [...coords];
+  steps = route.legs[0].steps || [];
+  stepIndex = 0;
+  lastSpokenStep = -1;
+}
+
+function highlightRoute(selectedLayer) {
+  alternativeLayers.forEach(l =>
+    l.setStyle({ color: "#999", weight: 4, opacity: 0.6 })
+  );
+  selectedLayer.setStyle({ color: "#007aff", weight: 6, opacity: 1 });
+  routeLayer = selectedLayer;
+}
 
 function simulateTrafficETA(baseTime) {
   const factor = 1 + (Math.random() * 0.3 - 0.15);
   const trafficTime = baseTime * factor;
-
   const etaEl = document.getElementById("traffic-eta");
-  if (etaEl) {
-    etaEl.innerText =
-      "ETA: " + (trafficTime / 60).toFixed(1) + " mins";
-  }
+  if (etaEl)
+    etaEl.innerText = "ETA: " + (trafficTime / 60).toFixed(1) + " mins";
 }
 
-/* ================= VOICE ================= */
+/* =====================================================
+   VOICE
+===================================================== */
 
 function speak(text) {
   if (!text) return;
@@ -251,123 +320,9 @@ function speak(text) {
   speechSynthesis.speak(msg);
 }
 
-/* ================= START NAVIGATION ================= */
-
-window.startNavigation = function () {
-
-  if (!remainingRoute.length) {
-    alert("Build route first");
-    return;
-  }
-
-  if (watchId) navigator.geolocation.clearWatch(watchId);
-
-  navMarker = L.marker(window.selectedStart).addTo(map);
-
-  speak("Navigation started.");
-
-  watchId = navigator.geolocation.watchPosition(onMove, null,
-    { enableHighAccuracy: true });
-};
-
-/* ================= GPS UPDATE ================= */
-
-function onMove(pos) {
-
-  const cur = {
-    lat: pos.coords.latitude,
-    lng: pos.coords.longitude
-  };
-
-  navMarker.setLatLng(cur);
-  map.panTo(cur, { animate: true, duration: 0.5 });
-
-  updateSpeed(cur);
-  updateRemainingRoute(cur);
-  updateInstruction(cur);
-  detectOffRoute(cur);
-}
-
-/* ================= EMERGENCY FEATURE ================= */
-
-window.triggerEmergency = function () {
-
-  if (!navigator.geolocation) {
-    alert("Location not supported");
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-
-    try {
-
-      await fetch("http://localhost:5000/api/emergency", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat, lng })
-      });
-
-      speak("Emergency alert sent to your family.");
-      alert("🚨 Emergency Alert Sent Successfully!");
-
-    } catch (err) {
-      alert("Failed to send emergency alert.");
-      console.error(err);
-    }
-
-  }, () => {
-    alert("Unable to fetch your location.");
-  });
-};
-
-/* ================= REST OF YOUR CODE (UNCHANGED) ================= */
-
-function detectOffRoute(cur) {
-  const nearest = remainingRoute.reduce((min, p) => {
-    const d = map.distance(cur, p);
-    return d < min ? d : min;
-  }, Infinity);
-
-  if (nearest > 50) {
-    speak("You are off route. Recalculating.");
-    window.selectedStart = cur;
-    window.buildRoute();
-  }
-}
-
-function updateSpeed(cur) {
-  const now = Date.now();
-  if (lastPos && lastTime) {
-    const d = map.distance(lastPos, cur);
-    const t = (now - lastTime) / 1000;
-    const speed = (d / t) * 3.6;
-    const speedEl = document.getElementById("nav-speed");
-    if (speedEl) speedEl.innerText = speed.toFixed(1) + " km/h";
-  }
-  lastPos = cur;
-  lastTime = now;
-}
-
-function updateRemainingRoute(cur) {
-  while (remainingRoute.length &&
-    map.distance(cur, remainingRoute[0]) < 15) {
-    remainingRoute.shift();
-  }
-}
-
-function updateInstruction(cur) {
-  if (!steps[stepIndex]) return;
-  const p = steps[stepIndex].maneuver.location;
-  const distance = map.distance(cur, { lat: p[1], lng: p[0] });
-  if (distance < 30 && stepIndex !== lastSpokenStep) {
-    speak(steps[stepIndex].maneuver.instruction);
-    lastSpokenStep = stepIndex;
-    stepIndex++;
-  }
-}
+/* =====================================================
+   FORMATTERS
+===================================================== */
 
 function formatTime(s) {
   const h = Math.floor(s / 3600);
@@ -381,6 +336,10 @@ function formatDistance(m) {
     : Math.round(m) + " m";
 }
 
+/* =====================================================
+   VEHICLE SELECT
+===================================================== */
+
 window.selectVehicle = function (e, vehicle) {
   document.querySelectorAll(".vehicle")
     .forEach(x => x.classList.remove("active"));
@@ -389,5 +348,11 @@ window.selectVehicle = function (e, vehicle) {
   if (window.selectedStart && window.selectedEnd)
     window.buildRoute();
 };
+
+/* =====================================================
+   INIT AI HANDLER
+===================================================== */
+
+setTimeout(handleAIDestination, 1200);
 
 });

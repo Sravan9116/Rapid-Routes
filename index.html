@@ -76,7 +76,7 @@
         </div>
 
         <!-- 🚨 EMERGENCY BUTTON -->
-        <button class="emergency-circle" onclick="triggerEmergency()">
+        <button type="button" class="emergency-circle" onclick="triggerEmergency()" title="Emergency">
             <i class="fa-solid fa-triangle-exclamation"></i>
         </button>
 
@@ -87,14 +87,14 @@
 
         <div id="ai-avatar" onclick="openAIDashboard()">
             <div class="pulse-ring"></div>
-            <i class="fa-solid fa-robot"></i>
+            <img src="images/Bot.png" alt="AI Bot Avatar">
         </div>
 
         <div id="ai-chat">
             <div id="ai-message">Hi! I'm your AI travel assistant.</div>
         </div>
 
-        <button id="ai-mic">
+        <button id="ai-mic" type="button" title="Microphone">
             <i class="fa-solid fa-microphone"></i>
         </button>
 
@@ -108,14 +108,10 @@
     <script src="js/ai.js"></script>
     <script>
         function openAIDashboard() {
-
-            // Save current GPS location to localStorage
             if (window.selectedStart) {
                 localStorage.setItem("userLat", window.selectedStart.lat);
                 localStorage.setItem("userLng", window.selectedStart.lng);
             }
-
-            // Save route info if available
             const distanceEl = document.getElementById("nav-distance");
             const etaEl = document.getElementById("traffic-eta");
 
@@ -124,11 +120,10 @@
 
             if (etaEl)
                 localStorage.setItem("tripETA", etaEl.innerText);
-
-            // Open AI dashboard page
-            window.open("ai/ai.html", "_blank");
+            window.location.href = "ai/ai.html";
         }
     </script>
+
 
 
 </body>

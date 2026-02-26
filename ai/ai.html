@@ -3,87 +3,88 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>AI Travel Assistant</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Travel AI</title>
 
     <link rel="stylesheet" href="ai.css">
+
+    <!-- Font Awesome (optional if still needed) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- ✅ Boxicons CDN -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 
 <body>
 
-    <div class="ai-wrapper">
-
-        <!-- LEFT PANEL (Trip Info) -->
-        <div class="side-panel">
-
-            <h2>🚗 Current Journey</h2>
-
-            <div class="card">
-                <p><strong>From:</strong> <span id="trip-start">Loading...</span></p>
-                <p><strong>To:</strong> <span id="trip-end">Loading...</span></p>
-                <p><strong>Distance:</strong> <span id="trip-distance">--</span></p>
-                <p><strong>ETA:</strong> <span id="trip-eta">--</span></p>
-            </div>
-
-            <h2>⛽ Fuel Stops</h2>
-            <div id="fuel-list" class="list-box"></div>
-
-            <h2>🍽 Restaurants</h2>
-            <div id="restaurant-list" class="list-box"></div>
-
-            <h2>🏨 Hotels</h2>
-            <div id="hotel-list" class="list-box"></div>
-
+    <!-- ===== HEADER ===== -->
+    <header class="ai-header">
+        <div class="logo">
+            <img src="images/Bot.png" alt="Smart Travel AI Bot" class="logo-img">
+            <p>Smart Travel AI</p>
         </div>
+    </header>
 
-        <!-- CENTER CHAT BOX -->
+
+    <!-- ===== CATEGORY BAR ===== -->
+    <div class="category-bar">
+
+        <button class="chip" onclick="searchPlace('restaurant')">
+            <i class='bx bx-restaurant'></i>
+            Restaurants
+        </button>
+
+        <button class="chip" onclick="searchPlace('hotel')">
+            <i class='bx bx-hotel'></i>
+            Hotels
+        </button>
+
+        <button class="chip" onclick="searchPlace('fuel')">
+            <i class='bx bx-gas-pump'></i>
+            Fuel
+        </button>
+
+        <button class="chip" onclick="searchPlace('hospital')">
+            <i class='bx bx-plus-medical'></i>
+            Hospitals
+        </button>
+
+        <button class="chip" onclick="searchPlace('atm')">
+            <i class='bx bx-credit-card'></i>
+            ATM
+        </button>
+
+        <button class="chip" onclick="searchPlace('tourist attraction')">
+            <i class='bx bx-camera'></i>
+            Things to Do
+        </button>
+
+        <button class="chip" onclick="searchPlace('pharmacy')">
+            <i class='bx bx-capsule'></i>
+            Pharmacy
+        </button>
+
+    </div>
+
+    <!-- ===== CHAT WRAPPER ===== -->
+    <div class="chat-wrapper">
+
         <div class="chat-container">
 
-            <div class="chat-header">
-                <div class="ai-avatar-big">
-                    <i class="fa-solid fa-robot"></i>
+            <!-- CHAT MESSAGES -->
+            <div id="chat-messages" class="chat-messages">
+                <div class="bot-message">
+                    👋 Hello! I’m your Smart Travel AI.
+                    Ask me anything about your journey.
                 </div>
-                <h2>Smart Travel AI</h2>
             </div>
 
-            <div id="chat-messages" class="chat-messages"></div>
-
+            <!-- INPUT AREA -->
             <div class="chat-input">
-                <input type="text" id="chat-input" placeholder="Ask me anything about your journey...">
-                <button id="chat-send">
-                    <i class="fa-solid fa-paper-plane"></i>
+                <input type="text" id="chatInput" placeholder="Ask about route, food, safety, hotels...">
+                <button onclick="sendMessage()">
+                    <i class='bx bx-send'></i>
                 </button>
-                <button id="chat-mic">
-                    <i class="fa-solid fa-microphone"></i>
-                </button>
-            </div>
-
-        </div>
-
-        <!-- RIGHT PANEL (Planning) -->
-        <div class="planning-panel">
-
-            <h2>🧠 Travel Planner</h2>
-
-            <div class="planner-card">
-                <p>🛣 Best Scenic Route</p>
-                <button onclick="suggestScenic()">Explore</button>
-            </div>
-
-            <div class="planner-card">
-                <p>🍽 Lunch Suggestion</p>
-                <button onclick="suggestFood()">Find Now</button>
-            </div>
-
-            <div class="planner-card">
-                <p>🚨 Safety Check</p>
-                <button onclick="safetyCheck()">Check</button>
-            </div>
-
-            <div class="planner-card">
-                <p>🛑 Accident Risk Monitor</p>
-                <button onclick="accidentAnalysis()">Analyze</button>
             </div>
 
         </div>
@@ -91,6 +92,7 @@
     </div>
 
     <script src="ai-dashboard.js"></script>
+
 </body>
 
 </html>

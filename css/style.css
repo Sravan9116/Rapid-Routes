@@ -217,83 +217,92 @@ body.dark .traffic-circle {
 
 #ai-container {
     position: absolute;
-    bottom: 110px;
+    bottom: 130px;
     left: 18px;
     z-index: 1500;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: center;
+    width: 300px;
 }
 
-/* ================= AI AVATAR ================= */
+/* ================= AI AVATAR WRAPPER ================= */
 
 #ai-avatar {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, #007aff, #00c6ff);
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 20px;
-    color: white;
     cursor: pointer;
     position: relative;
-    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
-    transition: all 0.3s ease;
+    /* IMPORTANT */
+    transition: transform 0.3s ease;
 }
 
+/* Bot Image */
+#ai-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    z-index: 2;
+}
+
+/* Hover effect */
 #ai-avatar:hover {
-    transform: scale(1.1);
-    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.6);
+    transform: scale(1.08);
 }
 
-/* ================= PULSE ANIMATION ================= */
+/* ================= SMALL RING ================= */
 
 .pulse-ring {
     position: absolute;
-    width: 60px;
-    height: 60px;
+    width: 62px;
+    height: 62px;
+    border: 2px solid rgba(0, 122, 255, 0.6);
     border-radius: 50%;
-    background: rgba(0, 122, 255, 0.25);
-    animation: pulse 1.8s infinite;
+    animation: pulseSmall 2s infinite ease-out;
+    z-index: 1;
 }
 
-@keyframes pulse {
+@keyframes pulseSmall {
     0% {
-        transform: scale(0.7);
-        opacity: 1;
+        transform: scale(0.9);
+        opacity: 0.8;
     }
 
     100% {
-        transform: scale(1.6);
+        transform: scale(1.4);
         opacity: 0;
     }
 }
 
-/* ================= CHAT BUBBLE ================= */
+/* ================= CHAT BUBBLE (NOW ATTACHED TO AVATAR) ================= */
 
 #ai-chat {
-    background: rgba(255, 255, 255, 0.9);
+    position: absolute;
+    bottom: 70px;
+    /* ABOVE avatar */
+    left: 0;
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
     padding: 14px 18px;
-    border-radius: 20px;
+    border-radius: 18px;
     max-width: 260px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    position: relative;
     animation: fadeIn 0.3s ease;
 }
 
-/* Chat bubble tail */
-#ai-chat::before {
+/* Bubble Tail */
+#ai-chat::after {
     content: "";
     position: absolute;
-    bottom: -8px;
-    left: 20px;
-    width: 16px;
-    height: 16px;
-    background: rgba(255, 255, 255, 0.9);
+    bottom: -6px;
+    left: 18px;
+    width: 14px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.95);
     transform: rotate(45deg);
 }
 
@@ -304,34 +313,15 @@ body.dark .traffic-circle {
     font-weight: 500;
     color: #333;
     line-height: 1.4;
-    position: relative;
-}
-
-/* ================= THINKING ANIMATION ================= */
-
-.thinking::after {
-    content: "...";
-    display: inline-block;
-    animation: dots 1.5s infinite steps(4);
-}
-
-@keyframes dots {
-    0% {
-        content: ".";
-    }
-
-    33% {
-        content: "..";
-    }
-
-    66% {
-        content: "...";
-    }
 }
 
 /* ================= MIC BUTTON ================= */
 
 #ai-mic {
+    position: absolute;
+    bottom: -55px;
+    /* below avatar */
+    left: 6px;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -346,22 +336,19 @@ body.dark .traffic-circle {
 
 #ai-mic:hover {
     transform: scale(1.1);
-    box-shadow: 0 8px 25px rgba(255, 59, 48, 0.6);
 }
 
-/* ================= LISTENING MODE ================= */
+/* ================= FADE ================= */
 
-.listening {
-    animation: listeningGlow 1s infinite alternate;
-}
-
-@keyframes listeningGlow {
+@keyframes fadeIn {
     from {
-        box-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
+        opacity: 0;
+        transform: translateY(8px);
     }
 
     to {
-        box-shadow: 0 0 25px rgba(255, 59, 48, 0.9);
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
